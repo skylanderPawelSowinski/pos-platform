@@ -1,0 +1,34 @@
+import { createRoute, z } from "@hono/zod-openapi";
+import { OpenAPIHono } from "@hono/zod-openapi";
+
+
+const healthSchema = z.object({
+    status: z.string(),
+});
+
+
+const route = createRoute({
+    method: "get",
+    path: "/",
+    tags: ["Health"],
+    responses: {
+        200: {
+            description: "Health check",
+            content: {
+                "application/json": {
+                    schema: healthSchema,
+                },
+            },
+        },
+    },
+});
+
+
+export const healthRoutes = new OpenAPIHono();
+
+
+healthRoutes.openapi(route, (c) => {
+    return c.json({
+        status: "ok",
+    });
+});

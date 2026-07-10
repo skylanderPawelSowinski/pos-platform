@@ -1,0 +1,21 @@
+{
+  "name": "pos-platform",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "docker:rundb": "docker compose -f infrastructure/docker/compose.yml up -d",
+
+    "format": "biome format . --write",
+    "check": "biome check ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.4",
+    "turbo": "^2.5.5",
+    "typescript": "^5.9.2"
+  }
+}

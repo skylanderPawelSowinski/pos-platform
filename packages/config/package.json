@@ -1,0 +1,14 @@
+{
+  "name": "@repo/config",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@repo/config": "workspace:*",
+    "@t3-oss/env-core": "^0.13.11",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0"
+  }
+}
