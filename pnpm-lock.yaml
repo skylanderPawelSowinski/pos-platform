@@ -26,6 +26,9 @@ importers:
       '@hono/zod-openapi':
         specifier: ^1.4.0
         version: 1.4.0(hono@4.12.28)(zod@4.4.3)
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -57,9 +60,6 @@ importers:
 
   packages/config:
     dependencies:
-      '@repo/config':
-        specifier: workspace:*
-        version: 'link:'
       '@t3-oss/env-core':
         specifier: ^0.13.11
         version: 0.13.11(typescript@5.9.3)(zod@4.4.3)

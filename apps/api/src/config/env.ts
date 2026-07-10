@@ -1,24 +1,15 @@
+import { env as sharedEnv } from "@repo/config";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
-
 export const env = createEnv({
-    server: {
-        NODE_ENV: z
-            .enum([
-                "development",
-                "test",
-                "production",
-            ])
-            .default("development"),
+  extends: [sharedEnv],
 
-        PORT: z
-            .coerce
-            .number()
-            .default(3000),
-    },
+  server: {
+    PORT: z.coerce.number().default(3000),
+  },
 
-    runtimeEnv: process.env,
+  runtimeEnv: process.env,
 
-    emptyStringAsUndefined: true,
+  emptyStringAsUndefined: true,
 });

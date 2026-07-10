@@ -20,15 +20,9 @@
     "baseUrl": ".",
 
     "paths": {
-      "@repo/config": [
-        "packages/config/src/index.ts"
-      ],
-      "@repo/database": [
-        "packages/database/src/index.ts"
-      ],
-      "@repo/*": [
-        "packages/*/src"
-      ]
+      "@repo/config": ["packages/config/src/index.ts"],
+      "@repo/database": ["packages/database/src/index.ts"],
+      "@repo/*": ["packages/*/src"]
     }
   }
 }

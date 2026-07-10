@@ -1,54 +1,61 @@
-import { createRoute, z } from "@hono/zod-openapi";
+import { createRoute } from "@hono/zod-openapi";
 
 import {
-    CreateTenantSchema,
-    TenantResponseSchema,
+  CreateTenantSchema,
+  TenantListResponseSchema,
+  TenantResponseSchema,
 } from "@repo/contracts";
 
 export const createTenantRoute = createRoute({
-    method: "post",
+  method: "post",
 
-    path: "/create",
+  path: "/create",
 
-    tags: ["Tenants"],
+  tags: ["Tenants"],
 
-    summary: "Create tenant",
+  summary: "Create tenant",
 
-    request: {
-        body: {
-            content: {
-                "application/json": {
-                    schema: CreateTenantSchema,
-                },
-            },
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: CreateTenantSchema,
         },
+      },
     },
+  },
 
-    responses: {
-        201: {
-            description: "Tenant created",
+  responses: {
+    201: {
+      description: "Tenant created",
 
-            content: {
-                "application/json": {
-                    schema: TenantResponseSchema,
-                },
-            },
+      content: {
+        "application/json": {
+          schema: TenantResponseSchema,
         },
+      },
     },
+  },
 });
 
 export const listTenantsRoute = createRoute({
-    method: "get",
+  method: "get",
 
-    path: "/list",
+  path: "/list",
 
-    tags: ["Tenants"],
+  tags: ["Tenants"],
 
-    summary: "List tenants",
+  summary: "List tenants",
 
-    responses: {
-        200: {
-            description: "Tenants listed",
+  responses: {
+    200: {
+      description: "Tenants listed",
+
+      content: {
+        "application/json": {
+          schema: TenantListResponseSchema,
         },
+      },
     },
+  },
 });

@@ -1,13 +1,13 @@
 export type TenantContext = {
-    requestId: string;
+  requestId: string;
 
-    tenantId: string | null;
+  tenantId: string | null;
 
-    locationId: string | null;
+  locationId: string | null;
 
-    registerId: string | null;
+  registerId: string | null;
 
-    userId: string | null;
+  userId: string | null;
 
-    permissions: string[];
+  permissions: string[];
 };

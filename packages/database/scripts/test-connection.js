@@ -1,65 +1,43 @@
-import { Client } from "pg";
 import AWS from "aws-sdk";
-
+import { Client } from "pg";
 
 AWS.config.update({
-    region: "eu-north-1",
+  region: "eu-north-1",
 });
 
-
 async function main() {
+  const signer = new AWS.RDS.Signer({
+    region: "eu-north-1",
+    hostname: process.env.DATABASE_URL || process.env.DATABASE_HOST,
+    port: 5432,
+    username: "postgres",
+  });
 
-    const signer =
-        new AWS.RDS.Signer({
-            region: "eu-north-1",
-            hostname:
-                process.env.DATABASE_URL || process.env.DATABASE_HOST,
-            port: 5432,
-            username: "postgres",
-        });
+  const password = signer.getAuthToken({});
 
+  const client = new Client({
+    host: process.env.DATABASE_URL || process.env.DATABASE_HOST,
 
-    const password =
-        signer.getAuthToken({});
+    port: 5432,
 
+    database: "postgres",
 
-    const client =
-        new Client({
-            host:
-                process.env.DATABASE_URL || process.env.DATABASE_HOST,
+    user: "postgres",
 
-            port: 5432,
+    password,
 
-            database:
-                "postgres",
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  });
 
-            user:
-                "postgres",
+  await client.connect();
 
-            password,
+  const result = await client.query("select version()");
 
-            ssl: {
-                rejectUnauthorized: false,
-            },
-        });
+  console.log(result.rows[0]);
 
-
-    await client.connect();
-
-
-    const result =
-        await client.query(
-            "select version()"
-        );
-
-
-    console.log(
-        result.rows[0]
-    );
-
-
-    await client.end();
+  await client.end();
 }
-
 
 main();
