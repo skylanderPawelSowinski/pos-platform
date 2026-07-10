@@ -1,12 +1,9 @@
 import { Hono } from "hono";
-
-import { router } from "./router";
-
 import { errorHandler } from "./middleware/error-handler";
-import { requestId } from "./middleware/request-id";
 import { loggerMiddleware } from "./middleware/logger";
+import { requestId } from "./middleware/request-id";
 import { tenantContext } from "./middleware/tenant-context";
-
+import { router } from "./router";
 
 export const app = new Hono();
 

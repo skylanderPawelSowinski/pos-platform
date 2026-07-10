@@ -1,26 +1,15 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
-
 export const env = createEnv({
-    server: {
-        NODE_ENV:
-            z.enum([
-                "development",
-                "test",
-                "production",
-            ])
-                .default("development"),
-        PORT:
-            z.coerce
-                .number()
-                .default(3000),
-        DATABASE_URL:
-            z.string()
-                .url(),
+  server: {
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
 
-    },
-    runtimeEnv: process.env,
+    DATABASE_URL: z.string().url(),
+  },
+  runtimeEnv: process.env,
 
-    emptyStringAsUndefined: true,
+  emptyStringAsUndefined: true,
 });

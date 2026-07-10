@@ -1,12 +1,15 @@
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 export abstract class ApiError extends Error {
-    abstract readonly status: ContentfulStatusCode;
-    abstract readonly code: string;
+  abstract readonly status: ContentfulStatusCode;
+  abstract readonly code: string;
 
-    constructor(message: string) {
-        super(message);
+  readonly details?: unknown;
 
-        this.name = this.constructor.name;
-    }
+  constructor(message: string, details?: unknown) {
+    super(message);
+
+    this.name = this.constructor.name;
+    this.details = details;
+  }
 }

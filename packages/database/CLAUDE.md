@@ -16,6 +16,39 @@ Architektura zakłada możliwość obsługi:
 
 ---
 
+# Terminologia (kanoniczna)
+
+Jeden słownik pojęć obowiązujący w **schemacie DB, kontraktach (`@repo/contracts`) i URL-ach API**. W razie konfliktu — ta tabela wygrywa.
+
+| Pojęcie (PL)            | Termin kanoniczny | Tabela / identyfikator | Rodzic   | Uwagi                                            |
+| ----------------------- | ----------------- | ---------------------- | -------- | ------------------------------------------------ |
+| Platforma               | Platform          | —                      | —        | cała instancja SaaS                              |
+| Organizacja klienta     | **Tenant**        | `tenants`              | Platform | **granica izolacji danych**                      |
+| Subskrypcja             | **Subscription**  | `subscriptions`        | Tenant   | plan, status, trial                              |
+| Członek organizacji     | **Member**        | `tenant_members`       | Tenant   | powiązanie user ↔ tenant + rola                  |
+| Włączany moduł          | **Feature**       | `tenant_features`      | Tenant   | flagi funkcji (BOOKING, LOYALTY…)                |
+| Firma (podmiot prawny)  | **Company**       | `companies`            | Tenant   | NIP, dane fakturowe, poziom raportowania         |
+| Oddział / lokal         | **Branch**        | `branches`             | Company  | fizyczna lokalizacja (było: `locations`)         |
+| Kasa / stanowisko POS   | **Register**      | `registers`            | Branch   | terminal POS                                     |
+| Magazyn                 | **Warehouse**     | `warehouses`           | Branch   | stan magazynowy                                  |
+| Pracownik               | **Employee**      | `employees`            | Company  | przypisania do wielu oddziałów                   |
+| Tożsamość / logowanie   | **User**          | `users` / Cognito      | Platform | uwierzytelnianie (patrz: plan Auth)              |
+
+**Moduły domenowe** (własne dane per Company): `catalog`, `inventory`, `sales`, `crm`, `booking`, `payments`, `reporting`, `settings`.
+
+## Konwencje nazewnicze
+
+* Tabele: `snake_case`, liczba mnoga (`tenant_members`).
+* Kolumny: `snake_case`; klucze obce: `tenant_id`, `company_id`, `branch_id`.
+* Identyfikatory w TS/Drizzle: `camelCase`, eksport tabeli w liczbie mnogiej (`export const branches`).
+* Klucze główne: `uuid` (`defaultRandom()`).
+* URL API: `snake`/kebab w ścieżkach REST, wersjonowane — `/api/v1/tenants`, `/api/v1/companies`…
+* **Każda tabela biznesowa** niesie `tenant_id` (+ `company_id` tam, gdzie dotyczy).
+
+> Migracja: obecna tabela `locations` zostanie przemianowana na `branches` i wpięta pod `companies` przy rozbudowie schematu.
+
+---
+
 # Hierarchia Platformy
 
 ```text
@@ -445,9 +478,55 @@ Dlaczego oba identyfikatory?
 * wiele firm w jednym Tenant,
 * łatwiejsze grupowanie danych.
 
+## Strategia izolacji — defense-in-depth (2 warstwy)
+
+Stosujemy **obie** warstwy jednocześnie: aplikacyjną (szybka, wygodna) i bazodanową (ostatnia linia obrony).
+
+### Warstwa 1 — App-level scoping
+
+Repozytoria **nigdy** nie odpytują tabeli biznesowej bez filtra po `tenant_id`. Zamiast surowego `db`, moduły dostają scoped repo z `TenantContext`:
+
+```ts
+// pseudokod docelowego wzorca
+function forTenant(tenantId: string) {
+  const scope = eq(table.tenantId, tenantId);
+  return {
+    list: () => db.select().from(table).where(scope),
+    // każdy select/update/delete AND-uje scope
+  };
+}
+```
+
+Zalety: proste, testowalne, czytelne. Wada: łatwo zapomnieć filtra → dlatego jest warstwa 2.
+
+### Warstwa 2 — Postgres Row-Level Security (RLS)
+
+Na każdej tabeli biznesowej włączamy RLS i politykę opartą o zmienną sesji:
+
+```sql
+ALTER TABLE branches ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation ON branches
+  USING (tenant_id = current_setting('app.current_tenant')::uuid);
+```
+
+Aplikacja na początku każdego żądania ustawia `SET app.current_tenant = '<tenantId>'` (w transakcji/połączeniu). Nawet jeśli zapytanie zgubi filtr aplikacyjny — baza i tak nie zwróci cudzych wierszy.
+
+> **Warunek:** klient DB nie może łączyć się jako `superuser`/właściciel tabeli (te role omijają RLS). Potrzebna dedykowana rola aplikacyjna.
+
+### Kolejność wdrożenia
+
+1. Najpierw warstwa 1 (helper `forTenant`) — wdrażana wraz z każdym nowym modułem.
+2. RLS włączamy migracją, gdy schemat tabel biznesowych się ustabilizuje (po rozbudowie `companies`/`branches`).
+3. `TenantContext.tenantId` musi pochodzić z **zweryfikowanego tokenu** (patrz: Auth), a nie z surowego nagłówka `x-tenant-id`.
+
 ---
 
 # Authentication Flow
+
+> **Dostawca tożsamości (do potwierdzenia):** kierunek — **AWS Cognito** (User Pool). Nie jest to jeszcze decyzja ostateczna.
+>
+> Niezależnie od dostawcy obowiązuje zasada: API **weryfikuje token** (JWT / JWKS) i z niego wyprowadza `userId`, `tenantId` oraz `permissions` do `TenantContext`. Nagłówek `x-tenant-id` jest obecnie tylko tymczasową atrapą i **nie może** być źródłem prawdy po wdrożeniu Auth.
 
 Logowanie odbywa się do Tenant.
 

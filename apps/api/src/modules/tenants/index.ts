@@ -1,24 +1,9 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
+import { createRouter } from "../../core/router";
+import { createTenantHandler, listTenantsHandler } from "./handlers";
+import { createTenantRoute, listTenantsRoute } from "./routes";
 
-import {
-    createTenantRoute,
-    listTenantsRoute,
-} from "./routes";
+export const tenantsRouter = createRouter();
 
-import {
-    createTenantHandler,
-    listTenantsHandler,
-} from "./handlers";
+tenantsRouter.openapi(createTenantRoute, createTenantHandler);
 
-export const tenantsRouter =
-    new OpenAPIHono();
-
-tenantsRouter.openapi(
-    createTenantRoute,
-    createTenantHandler,
-);
-
-tenantsRouter.openapi(
-    listTenantsRoute,
-    listTenantsHandler,
-);
+tenantsRouter.openapi(listTenantsRoute, listTenantsHandler);

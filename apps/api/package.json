@@ -10,6 +10,7 @@
     "lint": "biome check ."
   },
   "dependencies": {
+    "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@hono/swagger-ui": "^0.6.1",

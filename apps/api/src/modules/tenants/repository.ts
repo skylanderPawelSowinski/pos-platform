@@ -1,66 +1,46 @@
-import { eq } from "drizzle-orm";
+import type { CreateTenant } from "@repo/contracts";
 
 import { db, schema } from "@repo/database";
-
-import type {
-    CreateTenant,
-} from "@repo/contracts";
+import { eq } from "drizzle-orm";
 
 export const tenantRepository = {
+  async create(data: CreateTenant) {
+    const [tenant] = await db.insert(schema.tenants).values(data).returning({
+      id: schema.tenants.id,
+      name: schema.tenants.name,
+      slug: schema.tenants.slug,
+      status: schema.tenants.status,
+    });
 
-    async create(
-        data: CreateTenant,
-    ) {
+    return tenant;
+  },
 
-        const [tenant] =
-            await db
-                .insert(schema.tenants)
-                .values(data)
-                .returning({
-                    id: schema.tenants.id,
-                    name: schema.tenants.name,
-                    slug: schema.tenants.slug,
-                    status: schema.tenants.status,
-                });
+  async findById(id: string) {
+    const [tenant] = await db
+      .select()
+      .from(schema.tenants)
+      .where(eq(schema.tenants.id, id));
 
-        return tenant;
-    },
+    return tenant ?? null;
+  },
 
-    async findById(
-        id: string,
-    ) {
+  async findBySlug(slug: string) {
+    const [tenant] = await db
+      .select()
+      .from(schema.tenants)
+      .where(eq(schema.tenants.slug, slug));
 
-        const [tenant] =
-            await db
-                .select()
-                .from(schema.tenants)
-                .where(
-                    eq(schema.tenants.id, id),
-                );
+    return tenant ?? null;
+  },
 
-        return tenant ?? null;
-    },
-
-    async findBySlug(
-        slug: string,
-    ) {
-
-        const [tenant] =
-            await db
-                .select()
-                .from(schema.tenants)
-                .where(
-                    eq(schema.tenants.slug, slug),
-                );
-
-        return tenant ?? null;
-    },
-
-    async list() {
-
-        return db
-            .select()
-            .from(schema.tenants);
-    },
-
+  async list() {
+    return db
+      .select({
+        id: schema.tenants.id,
+        name: schema.tenants.name,
+        slug: schema.tenants.slug,
+        status: schema.tenants.status,
+      })
+      .from(schema.tenants);
+  },
 };

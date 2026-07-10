@@ -57,9 +57,7 @@
         "tenants_slug_unique": {
           "name": "tenants_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -132,12 +130,8 @@
           "name": "locations_tenant_id_tenants_id_fk",
           "tableFrom": "locations",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -153,11 +147,7 @@
     "public.tenant_status": {
       "name": "tenant_status",
       "schema": "public",
-      "values": [
-        "trial",
-        "active",
-        "suspended"
-      ]
+      "values": ["trial", "active", "suspended"]
     }
   },
   "schemas": {},

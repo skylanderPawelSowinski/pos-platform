@@ -1,8 +1,16 @@
 import type { Context } from "hono";
-import { TenantContext } from "./types";
+import type { TenantContext } from "./types";
+
+declare module "hono" {
+  interface ContextVariableMap {
+    requestId: string;
+    tenantContext: TenantContext;
+  }
+}
 
 export type AppContext = Context & {
-    var: {
-        tenantContext: TenantContext;
-    };
+  var: {
+    requestId: string;
+    tenantContext: TenantContext;
+  };
 };

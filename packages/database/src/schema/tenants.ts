@@ -1,70 +1,36 @@
-import {
-    pgTable,
-    uuid,
-    varchar,
-    timestamp,
-    pgEnum,
-} from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
+export const tenantStatus = pgEnum("tenant_status", [
+  "trial",
+  "active",
+  "suspended",
+]);
 
-export const tenantStatus =
-    pgEnum(
-        "tenant_status",
-        [
-            "trial",
-            "active",
-            "suspended",
-        ]
-    );
+export const tenants = pgTable("tenants", {
+  id: uuid("id").defaultRandom().primaryKey(),
 
+  name: varchar("name", {
+    length: 255,
+  }).notNull(),
 
-export const tenants = pgTable(
-    "tenants",
-    {
-        id: uuid("id")
-            .defaultRandom()
-            .primaryKey(),
+  slug: varchar("slug", {
+    length: 100,
+  })
+    .notNull()
+    .unique(),
 
-        name: varchar(
-            "name",
-            {
-                length: 255,
-            }
-        )
-            .notNull(),
+  status: tenantStatus().notNull().default("trial"),
 
-        slug: varchar(
-            "slug",
-            {
-                length: 100,
-            }
-        )
-            .notNull()
-            .unique(),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
 
-        status:
-            tenantStatus()
-                .notNull()
-                .default("trial"),
-
-        createdAt:
-            timestamp(
-                "created_at",
-                {
-                    withTimezone: true,
-                }
-            )
-                .notNull()
-                .defaultNow(),
-
-        updatedAt:
-            timestamp(
-                "updated_at",
-                {
-                    withTimezone: true,
-                }
-            )
-                .notNull()
-                .defaultNow(),
-    }
-);
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
