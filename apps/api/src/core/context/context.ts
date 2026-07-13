@@ -4,6 +4,7 @@ import type { TenantContext } from "./types";
 declare module "hono" {
   interface ContextVariableMap {
     requestId: string;
+    userId: string;
     tenantContext: TenantContext;
   }
 }
@@ -11,6 +12,7 @@ declare module "hono" {
 export type AppContext = Context & {
   var: {
     requestId: string;
+    userId: string;
     tenantContext: TenantContext;
   };
 };

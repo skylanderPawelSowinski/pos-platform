@@ -3,7 +3,7 @@ export type TenantContext = {
 
   tenantId: string | null;
 
-  locationId: string | null;
+  branchId: string | null;
 
   registerId: string | null;
 

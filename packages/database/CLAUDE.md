@@ -45,7 +45,7 @@ Jeden słownik pojęć obowiązujący w **schemacie DB, kontraktach (`@repo/cont
 * URL API: `snake`/kebab w ścieżkach REST, wersjonowane — `/api/v1/tenants`, `/api/v1/companies`…
 * **Każda tabela biznesowa** niesie `tenant_id` (+ `company_id` tam, gdzie dotyczy).
 
-> Migracja: obecna tabela `locations` zostanie przemianowana na `branches` i wpięta pod `companies` przy rozbudowie schematu.
+> ✅ Zrealizowane (migracja `0001_tenant_subtree`): `tenants`, `companies`, `branches` (rename z `locations`, wpięte pod `companies`), `subscriptions`, `tenant_members`, `tenant_features`. Kolejny etap: `registers`, `warehouses`, `employees`.
 
 ---
 
@@ -484,20 +484,26 @@ Stosujemy **obie** warstwy jednocześnie: aplikacyjną (szybka, wygodna) i bazod
 
 ### Warstwa 1 — App-level scoping
 
-Repozytoria **nigdy** nie odpytują tabeli biznesowej bez filtra po `tenant_id`. Zamiast surowego `db`, moduły dostają scoped repo z `TenantContext`:
+Repozytoria **nigdy** nie odpytują tabeli biznesowej bez filtra po `tenant_id`. Wzorzec: repozytorium to **fabryka domknięta nad `tenantId`** — nie da się wywołać metody bez podania Tenanta (implementacja: `modules/companies/repository.ts`, `modules/branches/repository.ts`):
 
 ```ts
-// pseudokod docelowego wzorca
-function forTenant(tenantId: string) {
-  const scope = eq(table.tenantId, tenantId);
+export function companyRepository(tenantId: string) {
   return {
-    list: () => db.select().from(table).where(scope),
-    // każdy select/update/delete AND-uje scope
+    list: () =>
+      db.select(columns).from(companies)
+        .where(eq(companies.tenantId, tenantId)),
+    create: (data) =>
+      db.insert(companies).values({ ...data, tenantId }).returning(columns),
+    findById: (id) =>
+      db.select(columns).from(companies)
+        .where(and(eq(companies.tenantId, tenantId), eq(companies.id, id))),
   };
 }
 ```
 
-Zalety: proste, testowalne, czytelne. Wada: łatwo zapomnieć filtra → dlatego jest warstwa 2.
+`tenantId` pochodzi z `requireTenantId(c)` (dziś z nagłówka `x-tenant-id`, docelowo z tokenu). Referencje między tabelami waliduje się w obrębie Tenanta (np. przy tworzeniu `branch` sprawdzamy `companyRepository(tenantId).findById(companyId)`), więc nie da się podpiąć zasobu pod cudzą firmę.
+
+Zalety: proste, testowalne, czytelne. Wada: łatwo zapomnieć filtra w nowym repo → dlatego jest warstwa 2.
 
 ### Warstwa 2 — Postgres Row-Level Security (RLS)
 
@@ -524,9 +530,14 @@ Aplikacja na początku każdego żądania ustawia `SET app.current_tenant = '<te
 
 # Authentication Flow
 
-> **Dostawca tożsamości (do potwierdzenia):** kierunek — **AWS Cognito** (User Pool). Nie jest to jeszcze decyzja ostateczna.
+> **Stan wdrożenia (model członkostwa):**
 >
-> Niezależnie od dostawcy obowiązuje zasada: API **weryfikuje token** (JWT / JWKS) i z niego wyprowadza `userId`, `tenantId` oraz `permissions` do `TenantContext`. Nagłówek `x-tenant-id` jest obecnie tylko tymczasową atrapą i **nie może** być źródłem prawdy po wdrożeniu Auth.
+> 1. `auth` middleware weryfikuje `Authorization: Bearer <token>` i ustawia `userId` w kontekście. Brak tokenu = anonim; niepoprawny = 401.
+> 2. `x-tenant-id` wybiera Tenanta, ale **nie jest zaufany sam z siebie** — guard `requireMembership` sprawdza wpis w `tenant_members` dla `(tenantId, userId)`. Brak członkostwa → 403.
+> 3. Rola z `tenant_members` → uprawnienia (`core/auth/permissions.ts`); `requirePermission(c, PERM)` egzekwuje je na endpointach.
+> 4. Utworzenie Tenanta wymaga tokenu; twórca dostaje członkostwo `owner` (w jednej transakcji).
+>
+> **Weryfikacja tokenu:** dziś HS256 z sekretem (`AUTH_JWT_SECRET`) — dev/test. Produkcyjnie (**AWS Cognito**, kierunek do potwierdzenia): podmiana `core/auth/verifier.ts` na `verifyWithJwks` (RS256, walidacja `iss`/`aud`/`exp`). Reszta aplikacji bez zmian.
 
 Logowanie odbywa się do Tenant.
 

@@ -1,5 +1,7 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { createRouter } from "./core/router";
+import { branchesRouter } from "./modules/branches";
+import { companiesRouter } from "./modules/companies";
 import { healthRoutes } from "./modules/health/route";
 import { tenantsRouter } from "./modules/tenants";
 
@@ -7,7 +9,11 @@ export const router = createRouter();
 
 router.route("/health", healthRoutes);
 
-router.route("api/v1/tenants", tenantsRouter);
+router.route("/api/v1/tenants", tenantsRouter);
+
+router.route("/api/v1/companies", companiesRouter);
+
+router.route("/api/v1/branches", branchesRouter);
 
 router.doc("/openapi.json", {
   openapi: "3.1.0",

@@ -8,11 +8,11 @@ export const tenantContext = createMiddleware(async (c, next) => {
 
     tenantId: tenantId ?? null,
 
-    locationId: null,
+    branchId: null,
 
     registerId: null,
 
-    userId: null,
+    userId: c.get("userId") ?? null,
 
     permissions: [],
   });

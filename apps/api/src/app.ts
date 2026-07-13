@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { auth } from "./middleware/auth";
 import { errorHandler } from "./middleware/error-handler";
 import { loggerMiddleware } from "./middleware/logger";
 import { requestId } from "./middleware/request-id";
@@ -9,6 +10,7 @@ export const app = new Hono();
 
 // Middleware
 app.use("*", requestId);
+app.use("*", auth);
 app.use("*", tenantContext);
 // Logger
 app.use("*", loggerMiddleware);

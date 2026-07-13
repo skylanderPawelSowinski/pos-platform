@@ -8,6 +8,7 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
+    "test:db:setup": "docker exec pos-postgres psql -U postgres -c \"CREATE DATABASE pos_platform_test\" || true && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pos_platform_test pnpm --filter @repo/database migrate",
     "docker:rundb": "docker compose -f infrastructure/docker/compose.yml up -d",
 
     "format": "biome format . --write",

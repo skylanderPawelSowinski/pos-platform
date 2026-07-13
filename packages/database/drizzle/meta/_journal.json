@@ -8,6 +8,13 @@
       "when": 1783377320329,
       "tag": "0000_lowly_slipstream",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783718130347,
+      "tag": "0001_tenant_subtree",
+      "breakpoints": true
     }
   ]
 }
